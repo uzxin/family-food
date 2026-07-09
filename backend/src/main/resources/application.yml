@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 9001
 
 spring:
   profiles:
@@ -7,7 +7,7 @@ spring:
   datasource:
     url: jdbc:mysql://8.137.185.141:3306/family-food?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
     username: family-food
-    password: MnkWMbGkAhckw5ex
+    password: ENC(6JQoPC3xytmJ99VEpjSWTzCFDLAjQ4f2GSiVBMDyKKo=)
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jackson:
@@ -29,15 +29,23 @@ mybatis-plus:
       table-prefix: ""
   mapper-locations: classpath:mapper/*.xml
 
+# Jasypt 配置加密
+# 主密码通过环境变量 JASYPT_ENCRYPTOR_PASSWORD 传入，请勿写在配置文件中
+jasypt:
+  encryptor:
+    password: ${JASYPT_ENCRYPTOR_PASSWORD:family-food-dev-key}
+    algorithm: PBEWithMD5AndDES
+    iv-generator-classname: org.jasypt.iv.NoIvGenerator
+
 # JWT配置
 jwt:
-  secret: family-food-secret-key-2024-please-change-in-production
+  secret: ENC(FQ38yIx+ZOqifV8X7S21jXCHZthyLnhvk+VNhLNpiqHNlMLwgXPxNs0hNsyYa6EAW0J5CX/77gSskvRveSu6KA==)
   expiration: 604800000  # 7天（毫秒）
 
 # 微信小程序配置
 wechat:
-  app-id: your-app-id
-  app-secret: your-app-secret
+  app-id: wx9938bf1ea2ed8e0a
+  app-secret: ENC(xuEir8jiwBggBoLwytLlYWt/2AMxcMQHY3PqCPfPkDa0eRDYqL/4gK3pCi5ljIdP)
 
 # Knife4j配置
 springdoc:

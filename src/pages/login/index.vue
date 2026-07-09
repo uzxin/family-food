@@ -175,8 +175,14 @@ export default {
     async handleWxLogin() {
       this.loading = true
       try {
-        const [err, loginRes] = await uni.login({ provider: 'weixin' })
-        if (err || !loginRes || !loginRes.code) {
+        const loginRes = await new Promise((resolve, reject) => {
+          uni.login({
+            provider: 'weixin',
+            success: resolve,
+            fail: reject
+          })
+        })
+        if (!loginRes || !loginRes.code) {
           uni.showToast({ title: '获取微信授权失败', icon: 'none' })
           return
         }
@@ -184,6 +190,7 @@ export default {
         this.onLoginSuccess(res)
       } catch (e) {
         console.error('微信登录失败', e)
+        uni.showToast({ title: '获取微信授权失败', icon: 'none' })
       } finally {
         this.loading = false
       }

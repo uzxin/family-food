@@ -4,7 +4,7 @@
  * - 401 时自动跳转登录页
  */
 
-const BASE_URL = 'http://8.137.185.141:8080'
+const BASE_URL = 'https://api.uzxin.asia'
 
 // ========== Token 管理 ==========
 

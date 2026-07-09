@@ -24,6 +24,7 @@
         <knife4j.version>3.0.3</knife4j.version>
         <springdoc.version>1.7.0</springdoc.version>
         <swagger.version>2.2.8</swagger.version>
+        <jasypt.version>3.0.5</jasypt.version>
     </properties>
 
     <dependencies>
@@ -102,6 +103,13 @@
             <groupId>io.swagger.core.v3</groupId>
             <artifactId>swagger-models</artifactId>
             <version>${swagger.version}</version>
+        </dependency>
+
+        <!-- Jasypt 配置加密 -->
+        <dependency>
+            <groupId>com.github.ulisesbocchio</groupId>
+            <artifactId>jasypt-spring-boot-starter</artifactId>
+            <version>${jasypt.version}</version>
         </dependency>
 
         <!-- Lombok -->

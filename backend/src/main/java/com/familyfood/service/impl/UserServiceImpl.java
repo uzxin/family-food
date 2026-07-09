@@ -14,11 +14,15 @@ import com.familyfood.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 
 @Slf4j
@@ -117,12 +121,15 @@ public class UserServiceImpl implements UserService {
             String url = String.format(
                     "https://api.weixin.qq.com/sns/jscode2session?appid=%s&secret=%s&js_code=%s&grant_type=authorization_code",
                     appId, appSecret, code);
+            MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
+            converter.setSupportedMediaTypes(Arrays.asList(MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN));
             RestTemplate restTemplate = new RestTemplate();
+            restTemplate.setMessageConverters(Collections.singletonList(converter));
             Map<String, Object> result = restTemplate.getForObject(url, Map.class);
+            log.info("调用微信接口获取openid,url:{},response:{}", url, result);
             if (result != null && result.containsKey("openid")) {
                 return (String) result.get("openid");
             }
-            log.error("微信登录失败: {}", result);
             return null;
         } catch (Exception e) {
             log.error("调用微信接口异常: ", e);
