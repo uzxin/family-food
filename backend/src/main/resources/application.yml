@@ -10,6 +10,11 @@ spring:
     password: ENC(6JQoPC3xytmJ99VEpjSWTzCFDLAjQ4f2GSiVBMDyKKo=)
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 15MB
+
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: Asia/Shanghai
@@ -46,6 +51,10 @@ jwt:
 wechat:
   app-id: wx9938bf1ea2ed8e0a
   app-secret: ENC(xuEir8jiwBggBoLwytLlYWt/2AMxcMQHY3PqCPfPkDa0eRDYqL/4gK3pCi5ljIdP)
+
+# 文件上传配置
+file:
+  upload-dir: ${FILE_UPLOAD_DIR:/www/images}
 
 # Knife4j配置
 springdoc:

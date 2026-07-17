@@ -5,6 +5,7 @@
  */
 
 const BASE_URL = 'https://api.uzxin.asia'
+const IMAGE_BASE_URL = 'https://api.uzxin.asia'
 
 // ========== Token 管理 ==========
 
@@ -67,8 +68,7 @@ function request(options) {
         const body = res.data
         if (res.statusCode === 401) {
           clearAuth()
-          uni.reLaunch({ url: '/pages/login/index' })
-          reject(new Error('未登录，请重新登录'))
+          reject(new Error('未登录'))
           return
         }
         if (res.statusCode >= 400) {
@@ -109,6 +109,61 @@ export const post = (url, data) => request({ url, method: 'POST', data })
 export const put = (url, data) => request({ url, method: 'PUT', data })
 export const del = (url) => request({ url, method: 'DELETE' })
 
+// ========== 文件上传 ==========
+
+export function uploadFile(filePath) {
+  const token = getToken()
+  const familyId = getCurrentFamilyId()
+  const header = {}
+  if (token) header['Authorization'] = `Bearer ${token}`
+  if (familyId) header['X-Family-Id'] = familyId
+
+  return new Promise((resolve, reject) => {
+    uni.uploadFile({
+      url: `${BASE_URL}/api/file/upload`,
+      filePath,
+      name: 'file',
+      header,
+      success: (res) => {
+        if (res.statusCode === 401) {
+          clearAuth()
+          reject(new Error('未登录'))
+          return
+        }
+        if (res.statusCode >= 400) {
+          uni.showToast({ title: `上传失败(${res.statusCode})`, icon: 'none' })
+          reject(new Error('上传失败'))
+          return
+        }
+        try {
+          const body = JSON.parse(res.data)
+          if (body.code === 200 || body.code === 0) {
+            resolve(body.data)
+          } else {
+            const msg = body.message || body.msg || '上传失败'
+            uni.showToast({ title: msg, icon: 'none' })
+            reject(new Error(msg))
+          }
+        } catch (e) {
+          uni.showToast({ title: '上传响应解析失败', icon: 'none' })
+          reject(e)
+        }
+      },
+      fail: (err) => {
+        uni.showToast({ title: '网络错误，请稍后重试', icon: 'none' })
+        reject(err)
+      }
+    })
+  })
+}
+
+/** 拼接图片完整 URL，若已是完整 URL 则直接返回 */
+export function getImageUrl(path) {
+  if (!path) return ''
+  if (path.startsWith('http://') || path.startsWith('https://')) return path
+  return `${IMAGE_BASE_URL}${path}`
+}
+
 // ========== 业务接口 ==========
 
 // 认证
@@ -140,6 +195,11 @@ export const categoryApi = {
   add:      (data)     => post('/api/category/add', data),
 }
 
+// 文件
+export const fileApi = {
+  upload: (filePath) => uploadFile(filePath),
+}
+
 // 菜品
 export const dishApi = {
   list:     (params)   => get('/api/dish/list', params),
@@ -147,6 +207,7 @@ export const dishApi = {
   add:      (data)     => post('/api/dish/add', data),
   update:   (id, data) => put(`/api/dish/update/${id}`, data),
   delete:   (id)       => del(`/api/dish/${id}`),
+  rate:     (id, rating) => put(`/api/dish/${id}/rate?rating=${rating}`),
 }
 
 // 菜单
@@ -165,5 +226,6 @@ export const historyApi = {
 export default {
   getToken, setToken, getUser, setUser, clearAuth, isLoggedIn,
   getCurrentFamilyId, setCurrentFamilyId,
-  authApi, userApi, familyApi, categoryApi, dishApi, menuApi, historyApi
+  uploadFile, getImageUrl,
+  authApi, userApi, familyApi, categoryApi, fileApi, dishApi, menuApi, historyApi
 }

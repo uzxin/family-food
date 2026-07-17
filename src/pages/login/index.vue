@@ -115,11 +115,85 @@
 
     <!-- 底部协议 -->
     <view class="footer">
-      <text>登录即代表同意</text>
-      <text class="footer-link">《用户协议》</text>
-      <text>和</text>
-      <text class="footer-link">《隐私政策》</text>
+      <view class="agree-row" @tap="agreed = !agreed">
+        <view class="checkbox" :class="{ checked: agreed }">
+          <text v-if="agreed" class="checkbox-icon">✓</text>
+        </view>
+        <text class="agree-text">我已阅读并同意</text>
+        <text class="footer-link" @tap.stop="openAgreement('user')">《用户协议》</text>
+        <text>和</text>
+        <text class="footer-link" @tap.stop="openAgreement('privacy')">《隐私政策》</text>
+      </view>
     </view>
+
+    <!-- 协议弹窗 -->
+    <view v-if="showAgreement" class="agreement-mask" @tap="closeAgreement">
+      <view class="agreement-popup" @tap.stop>
+        <view class="agreement-header">
+          <text class="agreement-title">{{ agreementType === 'user' ? '用户协议' : '隐私政策' }}</text>
+          <text class="agreement-close" @tap="closeAgreement">✕</text>
+        </view>
+        <scroll-view scroll-y class="agreement-body">
+          <!-- 用户协议 -->
+          <view v-if="agreementType === 'user'">
+            <text class="agreement-section-title">一、服务说明</text>
+            <text class="agreement-text">家庭点菜是一款为家庭用户提供菜单管理、菜品记录及点菜协作的小程序。使用本服务即表示您同意本协议各项条款。</text>
+
+            <text class="agreement-section-title">二、用户行为规范</text>
+            <text class="agreement-text">1. 您应注册真实信息，并对账号及密码安全负责。
+2. 不得发布违法、骚扰、侮辱等内容。
+3. 不得以任何方式破坏或干扰本服务的正常运行。</text>
+
+            <text class="agreement-section-title">三、账号管理</text>
+            <text class="agreement-text">1. 您可随时注销账号，注销后数据将被删除。
+2. 如发现账号被盗用，请立即联系我们。
+3. 我们有权对违规账号进行封禁处理。</text>
+
+            <text class="agreement-section-title">四、免责声明</text>
+            <text class="agreement-text">1. 因网络故障、系统维护等原因导致服务中断，我们不承担责任。
+2. 您应自行备份重要数据，我们对数据丢失不承担责任。</text>
+
+            <text class="agreement-section-title">五、协议修改</text>
+            <text class="agreement-text">我们有权根据法律法规及业务发展需要修改本协议，修改后的协议自公布之日起生效。</text>
+          </view>
+
+          <!-- 隐私政策 -->
+          <view v-else>
+            <text class="agreement-section-title">一、信息收集</text>
+            <text class="agreement-text">我们在您使用本小程序时可能收集以下信息：
+1. 您注册时填写的用户名、昵称和密码。
+2. 您主动创建的菜品、菜单等家庭数据。
+注：本小程序不会获取您的微信昵称和头像。</text>
+
+            <text class="agreement-section-title">二、信息使用</text>
+            <text class="agreement-text">1. 收集的信息仅用于提供本小程序的功能服务。
+2. 我们不会将您的信息出售或提供给第三方。
+3. 除法律法规要求外，不会向任何第三方披露您的个人信息。</text>
+
+            <text class="agreement-section-title">三、信息存储与安全</text>
+            <text class="agreement-text">1. 您的数据存储在安全的服务器中，我们采取合理措施保护数据安全。
+2. 我们将在实现服务目的所必需的期限内保留您的信息。</text>
+
+            <text class="agreement-section-title">四、用户权利</text>
+            <text class="agreement-text">1. 您有权访问、更正和删除您的个人信息。
+2. 您可通过注销账号删除所有个人数据。
+3. 如需行使上述权利，请联系我们。</text>
+
+            <text class="agreement-section-title">五、未成年人保护</text>
+            <text class="agreement-text">本小程序主要面向家庭用户。未成年人应在监护人指导下使用，我们不会主动收集未成年人个人信息。</text>
+
+            <text class="agreement-section-title">六、联系我们</text>
+            <text class="agreement-text">如对本隐私政策有任何疑问，可通过小程序内的反馈功能与我们联系。</text>
+          </view>
+        </scroll-view>
+        <view class="agreement-footer">
+          <view class="agreement-ok-btn" @tap="closeAgreement">
+            <text class="agreement-ok-text">我知道了</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
   </view>
 </template>
 
@@ -134,11 +208,15 @@ export default {
       showLoginPwd: false,
       showRegPwd: false,
       loginForm: { username: '', password: '' },
-      regForm: { nickname: '', username: '', password: '' }
+      regForm: { nickname: '', username: '', password: '' },
+      showAgreement: false,
+      agreementType: 'user',
+      agreed: false
     }
   },
   methods: {
     async handleLogin() {
+      if (!this.agreed) return uni.showToast({ title: '请先勾选同意用户协议和隐私政策', icon: 'none' })
       const { username, password } = this.loginForm
       if (!username.trim()) return uni.showToast({ title: '请输入用户名', icon: 'none' })
       if (!password) return uni.showToast({ title: '请输入密码', icon: 'none' })
@@ -154,6 +232,7 @@ export default {
     },
 
     async handleRegister() {
+      if (!this.agreed) return uni.showToast({ title: '请先勾选同意用户协议和隐私政策', icon: 'none' })
       const { nickname, username, password } = this.regForm
       if (!nickname.trim()) return uni.showToast({ title: '请输入昵称', icon: 'none' })
       if (username.length < 4) return uni.showToast({ title: '用户名至少 4 位', icon: 'none' })
@@ -173,6 +252,7 @@ export default {
     },
 
     async handleWxLogin() {
+      if (!this.agreed) return uni.showToast({ title: '请先勾选同意用户协议和隐私政策', icon: 'none' })
       this.loading = true
       try {
         const loginRes = await new Promise((resolve, reject) => {
@@ -196,12 +276,26 @@ export default {
       }
     },
 
+    openAgreement(type) {
+      this.agreementType = type
+      this.showAgreement = true
+    },
+
+    closeAgreement() {
+      this.showAgreement = false
+    },
+
     onLoginSuccess(res) {
       setToken(res.token)
       setUser({ userId: res.userId, nickname: res.nickname })
       uni.showToast({ title: '登录成功', icon: 'success' })
       setTimeout(() => {
-        uni.switchTab({ url: '/pages/index/index' })
+        const pages = getCurrentPages()
+        if (pages.length > 1) {
+          uni.navigateBack()
+        } else {
+          uni.switchTab({ url: '/pages/index/index' })
+        }
       }, 600)
     }
   }
@@ -476,13 +570,122 @@ export default {
   margin-top: auto;
   padding-top: 48rpx;
   padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
-  text-align: center;
-  font-size: 22rpx;
+  position: relative;
+  z-index: 1;
+}
+.agree-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.checkbox {
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 8rpx;
+  border: 2rpx solid rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12rpx;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.checkbox.checked {
+  background: #ff6b35;
+  border-color: #ff6b35;
+}
+.checkbox-icon {
+  font-size: 24rpx;
+  color: #fff;
+  font-weight: bold;
+}
+.agree-text {
+  font-size: 24rpx;
   color: rgba(255, 255, 255, 0.7);
-  line-height: 1.6;
 }
 .footer-link {
+  font-size: 24rpx;
   color: rgba(255, 255, 255, 0.95);
   text-decoration: underline;
 }
+
+/* ===== 协议弹窗 ===== */
+.agreement-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.agreement-popup {
+  width: 86%;
+  max-height: 76vh;
+  background: #fff;
+  border-radius: 24rpx;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.agreement-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 32rpx 36rpx 24rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+.agreement-title {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #1f2937;
+}
+.agreement-close {
+  font-size: 36rpx;
+  color: #9ca3af;
+  padding: 4rpx 8rpx;
+}
+.agreement-body {
+  flex: 1;
+  padding: 28rpx 36rpx;
+  display: flex;
+  flex-direction: column;
+}
+.agreement-section-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1f2937;
+  margin-top: 24rpx;
+  margin-bottom: 12rpx;
+  display: block;
+}
+.agreement-section-title:first-child {
+  margin-top: 0;
+}
+.agreement-text {
+  font-size: 26rpx;
+  color: #6b7280;
+  line-height: 1.8;
+  display: block;
+}
+.agreement-footer {
+  padding: 20rpx 36rpx 32rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+.agreement-ok-btn {
+  background: linear-gradient(135deg, #ff8a4c, #ff6b35);
+  border-radius: 16rpx;
+  padding: 24rpx;
+  text-align: center;
+}
+.agreement-ok-text {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #fff;
+}
+
 </style>

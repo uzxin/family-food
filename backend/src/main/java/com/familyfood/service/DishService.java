@@ -33,4 +33,9 @@ public interface DishService {
      * 删除菜品
      */
     void deleteDish(Long dishId);
+
+    /**
+     * 菜品评分
+     */
+    void rateDish(Long dishId, int rating);
 }

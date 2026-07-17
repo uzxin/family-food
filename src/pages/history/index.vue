@@ -1,7 +1,16 @@
 <template>
   <view class="page">
+    <!-- 未登录提示 -->
+    <view class="login-prompt" v-if="!loggedIn">
+      <text class="login-prompt-icon">🔒</text>
+      <text class="login-prompt-title">登录后即可查看历史记录</text>
+      <view class="login-prompt-btn" @tap="goLogin">
+        <text>去登录</text>
+      </view>
+    </view>
+
     <!-- 月份切换 -->
-    <view class="month-nav">
+    <view class="month-nav" v-if="loggedIn">
       <view class="month-btn" @tap="prevMonth">
         <text class="arrow-text">❮</text>
       </view>
@@ -12,7 +21,7 @@
     </view>
 
     <!-- 日历 -->
-    <view class="calendar">
+    <view class="calendar" v-if="loggedIn">
       <view class="weekday-row">
         <text class="weekday" v-for="w in weekdays" :key="w">{{ w }}</text>
       </view>
@@ -36,14 +45,14 @@
     </view>
 
     <!-- 选中日期的菜单 -->
-    <view class="day-menu" v-if="selectedDate">
+    <view class="day-menu" v-if="loggedIn && selectedDate">
       <view class="day-menu-header">
         <text class="day-menu-title">{{ formatSelectedDate }}</text>
         <text class="day-menu-count" v-if="selectedDishes.length > 0">{{ selectedDishes.length }}道菜</text>
       </view>
       <view class="day-menu-list" v-if="selectedDishes.length > 0">
         <view class="day-menu-item" v-for="dish in selectedDishes" :key="dish.id">
-          <image class="item-cover" :src="dish.imageUrl || defaultDishImage" mode="aspectFill" />
+          <image class="item-cover" :src="getImageUrl(dish.imageUrl) || defaultDishImage" mode="aspectFill" />
           <text class="item-name">{{ dish.name }}</text>
           <text class="item-cat">{{ dish.categoryName }}</text>
         </view>
@@ -54,7 +63,7 @@
     </view>
 
     <!-- 统计摘要 -->
-    <view class="stats-section">
+    <view class="stats-section" v-if="loggedIn">
       <text class="stats-title">本月统计</text>
       <view class="stats-grid">
         <view class="stat-card">
@@ -92,7 +101,7 @@
 </template>
 
 <script>
-import { historyApi, menuApi } from '../../utils/api.js'
+import { historyApi, menuApi, getImageUrl, isLoggedIn } from '../../utils/api.js'
 import tabBarView from '../../components/tab-bar-view/tab-bar-view.vue'
 import defaultDishImage from '../../static/default-dish.svg'
 
@@ -120,7 +129,9 @@ export default {
       menuDates: [],
       monthStats: { totalDays: 0, totalDishes: 0, uniqueDishes: 0 },
       monthTopDishes: [],
-      defaultDishImage
+      defaultDishImage,
+      getImageUrl,
+      loggedIn: false
     }
   },
   computed: {
@@ -129,12 +140,21 @@ export default {
     }
   },
   onShow() {
+    this.loggedIn = isLoggedIn()
     const now = new Date()
     this.currentYear = now.getFullYear()
     this.currentMonth = now.getMonth() + 1
     this.selectedDate = getTodayStr()
-    this.loadMonthData()
-    this.loadSelectedMenu()
+    if (this.loggedIn) {
+      this.loadMonthData()
+      this.loadSelectedMenu()
+    } else {
+      this.calendarDays = []
+      this.selectedDishes = []
+      this.monthStats = { totalDays: 0, totalDishes: 0, uniqueDishes: 0 }
+      this.monthTopDishes = []
+      this.buildEmptyCalendar()
+    }
   },
   methods: {
     async loadMonthData() {
@@ -216,6 +236,25 @@ export default {
       } catch (e) {
         this.selectedDishes = []
       }
+    },
+
+    buildEmptyCalendar() {
+      const year = this.currentYear
+      const month = this.currentMonth
+      const firstDay = new Date(year, month - 1, 1).getDay()
+      const daysInMonth = new Date(year, month, 0).getDate()
+      const days = []
+      for (let i = 0; i < firstDay; i++) {
+        days.push({ date: null, dateStr: '', hasMenu: false, isToday: false })
+      }
+      for (let d = 1; d <= daysInMonth; d++) {
+        days.push({ date: d, dateStr: '', hasMenu: false, isToday: false })
+      }
+      this.calendarDays = days
+    },
+
+    goLogin() {
+      uni.navigateTo({ url: '/pages/login/index' })
     }
   }
 }
@@ -227,6 +266,35 @@ export default {
   background: #f5f5f5;
   padding: 24rpx;
   padding-bottom: 160rpx;
+}
+
+/* 未登录提示 */
+.login-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 48rpx 80rpx;
+}
+.login-prompt-icon {
+  font-size: 100rpx;
+  margin-bottom: 32rpx;
+}
+.login-prompt-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 40rpx;
+}
+.login-prompt-btn {
+  background: #ff6b35;
+  border-radius: 999rpx;
+  padding: 22rpx 80rpx;
+  box-shadow: 0 8rpx 24rpx rgba(255, 107, 53, 0.3);
+}
+.login-prompt-btn text {
+  font-size: 28rpx;
+  color: #fff;
+  font-weight: 600;
 }
 
 /* 月份导航 */

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>家庭点菜 - 家庭菜单管理小程序</title>
+  <meta name="description" content="家庭点菜是一款面向家庭用户的微信小程序，提供菜品管理、每日菜单安排、家庭协作点菜等功能，帮助家庭轻松决定每天吃什么。">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; color: #333; background: #fff; }
+
+    /* 顶部导航 */
+    .nav { position: fixed; top: 0; left: 0; right: 0; height: 64px; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid #f0f0f0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 48px; }
+    .nav-logo { font-size: 20px; font-weight: 700; color: #ff6b35; display: flex; align-items: center; gap: 8px; }
+    .nav-links { display: flex; gap: 32px; }
+    .nav-links a { text-decoration: none; color: #555; font-size: 15px; transition: color 0.2s; }
+    .nav-links a:hover { color: #ff6b35; }
+
+    /* Hero */
+    .hero { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(160deg, #ff8a4c 0%, #ff6b35 30%, #e8542a 60%, #d63f6e 100%); position: relative; overflow: hidden; padding: 80px 24px 0; }
+    .hero-blob { position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.4; }
+    .hero-blob-1 { width: 400px; height: 400px; background: rgba(255,200,100,0.6); top: -100px; right: -50px; }
+    .hero-blob-2 { width: 300px; height: 300px; background: rgba(255,100,150,0.4); bottom: 50px; left: -80px; }
+    .hero-content { position: relative; z-index: 1; text-align: center; max-width: 720px; }
+    .hero-emoji { font-size: 72px; margin-bottom: 16px; }
+    .hero h1 { font-size: 52px; color: #fff; font-weight: 800; letter-spacing: 4px; margin-bottom: 16px; text-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .hero-sub { font-size: 20px; color: rgba(255,255,255,0.9); margin-bottom: 40px; line-height: 1.6; }
+    .hero-cta { display: inline-flex; align-items: center; gap: 10px; background: #fff; color: #ff6b35; padding: 16px 40px; border-radius: 50px; font-size: 18px; font-weight: 600; text-decoration: none; box-shadow: 0 12px 32px rgba(0,0,0,0.15); transition: transform 0.2s; }
+    .hero-cta:hover { transform: scale(1.05); }
+
+    /* 通用 section */
+    .section { padding: 100px 24px; max-width: 1080px; margin: 0 auto; }
+    .section-title { text-align: center; font-size: 36px; font-weight: 700; color: #1f2937; margin-bottom: 16px; }
+    .section-sub { text-align: center; font-size: 16px; color: #9ca3af; margin-bottom: 60px; }
+
+    /* 功能卡片 */
+    .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 32px; }
+    .feature-card { background: #fff; border: 1px solid #f0f0f0; border-radius: 20px; padding: 40px 32px; text-align: center; transition: all 0.3s; }
+    .feature-card:hover { border-color: #ff6b35; box-shadow: 0 12px 40px rgba(255,107,53,0.1); transform: translateY(-4px); }
+    .feature-icon { font-size: 48px; margin-bottom: 20px; }
+    .feature-card h3 { font-size: 20px; font-weight: 600; color: #1f2937; margin-bottom: 12px; }
+    .feature-card p { font-size: 15px; color: #6b7280; line-height: 1.7; }
+
+    /* 使用步骤 */
+    .steps { display: flex; flex-wrap: wrap; justify-content: center; gap: 24px; }
+    .step-item { flex: 1; min-width: 200px; max-width: 260px; text-align: center; }
+    .step-num { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #ff8a4c, #ff6b35); color: #fff; font-size: 24px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+    .step-item h4 { font-size: 18px; color: #1f2937; margin-bottom: 8px; }
+    .step-item p { font-size: 14px; color: #9ca3af; line-height: 1.6; }
+
+    /* 底部 */
+    .footer { background: #1f2937; color: #9ca3af; padding: 60px 24px 40px; text-align: center; }
+    .footer-logo { font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 16px; }
+    .footer-text { font-size: 14px; line-height: 1.8; margin-bottom: 8px; }
+    .footer a { color: #ff8a4c; text-decoration: none; }
+
+    @media (max-width: 640px) {
+      .nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      .hero h1 { font-size: 36px; }
+      .hero-sub { font-size: 16px; }
+      .section { padding: 60px 20px; }
+      .section-title { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 导航栏 -->
+  <nav class="nav">
+    <div class="nav-logo">🍲 家庭点菜</div>
+    <div class="nav-links">
+      <a href="#features">功能介绍</a>
+      <a href="#steps">使用流程</a>
+      <a href="#about">关于我们</a>
+    </div>
+  </nav>
+
+  <!-- Hero 区域 -->
+  <section class="hero">
+    <div class="hero-blob hero-blob-1"></div>
+    <div class="hero-blob hero-blob-2"></div>
+    <div class="hero-content">
+      <div class="hero-emoji">🍲</div>
+      <h1>家庭点菜</h1>
+      <p class="hero-sub">今天吃什么，一起决定<br>家庭菜单管理 · 菜品库 · 每日点菜 · 历史回顾</p>
+      <a href="#steps" class="hero-cta">了解详情 ↓</a>
+    </div>
+  </section>
+
+  <!-- 功能介绍 -->
+  <section class="section" id="features">
+    <h2 class="section-title">核心功能</h2>
+    <p class="section-sub">为家庭日常饮食管理提供一站式解决方案</p>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📖</div>
+        <h3>菜品库管理</h3>
+        <p>建立家庭专属菜品库，支持自定义分类、菜品详情记录，方便随时查阅和添加新菜式。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📅</div>
+        <h3>每日菜单</h3>
+        <p>为每一天安排菜单，从菜品库中选择菜品加入当日菜单，轻松规划家庭每日饮食。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">👨‍👩‍👧‍👦</div>
+        <h3>家庭协作</h3>
+        <p>支持创建家庭、邀请成员加入，全家人共享同一个菜品库和菜单，协同点菜更方便。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>历史回顾</h3>
+        <p>按月查看历史菜单记录，了解家庭饮食搭配情况，避免重复，丰富餐桌。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💬</div>
+        <h3>微信一键登录</h3>
+        <p>支持微信快捷登录，无需额外注册账号，打开小程序即可使用，方便快捷。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h3>隐私安全</h3>
+        <p>仅收集必要信息（用户名、菜品数据），不获取微信昵称和头像，注重用户隐私保护。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 使用流程 -->
+  <section class="section" id="steps" style="background: #f9fafb;">
+    <h2 class="section-title">使用流程</h2>
+    <p class="section-sub">三步开始使用，简单便捷</p>
+    <div class="steps">
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <h4>微信登录</h4>
+        <p>打开「家庭点菜」小程序，使用微信一键登录，或使用用户名密码注册登录。</p>
+      </div>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <h4>创建家庭</h4>
+        <p>创建你的家庭，邀请家人加入，共享菜品库。系统预置常见分类，开箱即用。</p>
+      </div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <h4>开始点菜</h4>
+        <p>添加菜品到菜品库，为每天安排菜单，全家人共同参与，轻松决定今天吃什么。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 关于 -->
+  <section class="section" id="about">
+    <h2 class="section-title">关于我们</h2>
+    <p class="section-sub">家庭点菜 — 让家庭饮食管理更简单</p>
+    <div style="max-width: 680px; margin: 0 auto; text-align: center; color: #6b7280; font-size: 16px; line-height: 2;">
+      <p>「家庭点菜」是一款专为家庭场景设计的微信小程序，致力于解决"今天吃什么"这个日常难题。</p>
+      <p>通过菜品库管理、每日菜单安排、家庭协作等功能，帮助家庭轻松规划饮食，让每一餐都不再纠结。</p>
+      <p style="margin-top: 24px;">在微信中搜索「家庭点菜」即可使用。</p>
+    </div>
+  </section>
+
+  <!-- 底部 -->
+  <footer class="footer">
+    <div class="footer-logo">🍲 家庭点菜</div>
+    <p class="footer-text">家庭菜单管理微信小程序</p>
+    <p class="footer-text">今天吃什么，一起决定</p>
+    <p class="footer-text" style="margin-top: 20px; font-size: 13px; color: #6b7280;">
+      &copy; 2024 家庭点菜 &nbsp;|&nbsp; 本网站仅用于小程序信息介绍及域名备案用途
+    </p>
+  </footer>
+
+</body>
+</html>

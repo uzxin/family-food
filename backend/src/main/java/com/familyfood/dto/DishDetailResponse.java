@@ -15,6 +15,7 @@ public class DishDetailResponse {
     private String categoryName;
     private String difficulty;
     private String imageUrl;
+    private Integer rating;
     private String remark;
     private List<String> ingredients;
     private LocalDateTime createTime;
@@ -29,6 +30,7 @@ public class DishDetailResponse {
         response.setCategoryName(categoryName);
         response.setDifficulty(dish.getDifficulty());
         response.setImageUrl(dish.getImageUrl());
+        response.setRating(dish.getRating() != null ? dish.getRating() : 0);
         response.setRemark(dish.getRemark());
         response.setIngredients(ingredients);
         response.setCreateTime(dish.getCreateTime());

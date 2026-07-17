@@ -9,6 +9,7 @@ public class UpdateDishRequest {
     private String categoryCode;
     private String difficulty;
     private String imageUrl;
+    private Integer rating;
     private String remark;
     private List<String> ingredients;
 }

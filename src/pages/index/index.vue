@@ -13,8 +13,20 @@
       </view>
     </view>
 
+    <!-- 未登录提示 -->
+    <view class="empty-state" v-if="!loggedIn">
+      <view class="empty-illustration">
+        <text class="empty-icon">🔒</text>
+      </view>
+      <text class="empty-title">登录后即可查看今日菜单</text>
+      <text class="empty-desc">登录后可管理家庭菜单，点菜更方便</text>
+      <view class="empty-action" @tap="goLogin">
+        <text>去登录</text>
+      </view>
+    </view>
+
     <!-- 今日菜单概览 -->
-    <view class="menu-overview" v-if="todayDishes.length > 0">
+    <view class="menu-overview" v-if="loggedIn && todayDishes.length > 0">
       <view class="overview-header">
         <view class="overview-left">
           <text class="overview-label">今日已点</text>
@@ -38,14 +50,14 @@
     </view>
 
     <!-- 今日菜单卡片网格 -->
-    <view class="dish-grid" v-if="todayDishes.length > 0">
+    <view class="dish-grid" v-if="loggedIn && todayDishes.length > 0">
       <view
         class="dish-card"
         v-for="dish in todayDishes"
         :key="dish.id"
       >
         <view class="dish-card-img-wrap">
-          <image class="dish-card-img" :src="dish.imageUrl || defaultDishImage" mode="aspectFill" />
+          <image class="dish-card-img" :src="getImageUrl(dish.imageUrl) || defaultDishImage" mode="aspectFill" />
           <view class="dish-card-cat-tag" :style="{ background: getCategoryColor(dish.categoryName) }">
             <text>{{ dish.categoryName }}</text>
           </view>
@@ -60,7 +72,7 @@
     </view>
 
     <!-- 空状态 -->
-    <view class="empty-state" v-if="todayDishes.length === 0">
+    <view class="empty-state" v-if="loggedIn && todayDishes.length === 0">
       <view class="empty-illustration">
         <text class="empty-icon">🍽️</text>
       </view>
@@ -72,7 +84,7 @@
     </view>
 
     <!-- 智能推荐 -->
-    <view class="section" v-if="recommendations.length > 0">
+    <view class="section" v-if="loggedIn && recommendations.length > 0">
       <view class="section-header">
         <text class="section-title">为你推荐</text>
         <view class="refresh-btn" @tap="refreshRecommend">
@@ -87,7 +99,7 @@
             :key="dish.id"
             @tap="quickAdd(dish)"
           >
-            <image class="recommend-cover" :src="dish.imageUrl || defaultDishImage" mode="aspectFill" />
+            <image class="recommend-cover" :src="getImageUrl(dish.imageUrl) || defaultDishImage" mode="aspectFill" />
             <view class="recommend-info">
               <text class="recommend-name">{{ dish.name }}</text>
               <text class="recommend-cat">{{ dish.categoryName }}</text>
@@ -104,7 +116,7 @@
     </view>
 
     <!-- 操作按钮 -->
-    <view class="action-bar">
+    <view class="action-bar" v-if="loggedIn">
       <view class="action-btn primary" @tap="goOrder">
         <text class="action-btn-icon">📋</text>
         <text>去点菜台</text>
@@ -116,7 +128,7 @@
     </view>
 
     <!-- 菜品库入口提示 -->
-    <view class="tip-card" v-if="dishCount === 0">
+    <view class="tip-card" v-if="loggedIn && dishCount === 0">
       <text class="tip-icon">💡</text>
       <view class="tip-content">
         <text class="tip-title">还没有添加菜品</text>
@@ -132,7 +144,7 @@
 </template>
 
 <script>
-import { isLoggedIn, menuApi, dishApi, familyApi } from '../../utils/api.js'
+import { isLoggedIn, menuApi, dishApi, familyApi, getImageUrl } from '../../utils/api.js'
 import tabBarView from '../../components/tab-bar-view/tab-bar-view.vue'
 import defaultDishImage from '../../static/default-dish.svg'
 
@@ -156,6 +168,7 @@ export default {
       dishCount: 0,
       todayStr: '',
       defaultDishImage,
+      getImageUrl,
       currentFamilyName: '我的家庭',
       catColorMap: {
         '荤菜': '#e74c3c',
@@ -166,7 +179,8 @@ export default {
         '海鲜': '#1abc9c',
         '甜品': '#e91e63',
         '其他': '#95a5a6'
-      }
+      },
+      loggedIn: false
     }
   },
   computed: {
@@ -181,8 +195,13 @@ export default {
     }
   },
   onShow() {
-    if (!isLoggedIn()) {
-      uni.reLaunch({ url: '/pages/login/index' })
+    this.loggedIn = isLoggedIn()
+    if (!this.loggedIn) {
+      this.todayDishes = []
+      this.recommendations = []
+      this.dishCount = 0
+      this.todayStr = formatDate(new Date())
+      this.currentFamilyName = '未登录'
       return
     }
     this.loadData()
@@ -270,6 +289,10 @@ export default {
 
     goAddDish() {
       uni.navigateTo({ url: '/pages/add-dish/index' })
+    },
+
+    goLogin() {
+      uni.navigateTo({ url: '/pages/login/index' })
     },
 
     async randomMenu() {

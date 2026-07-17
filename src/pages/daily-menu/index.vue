@@ -54,7 +54,7 @@
             @tap="toggleSelect(dish)"
           >
             <view class="cell-cover-wrap">
-              <image class="cell-cover" :src="dish.imageUrl || defaultDishImage" mode="aspectFill" />
+              <image class="cell-cover" :src="getImageUrl(dish.imageUrl) || defaultDishImage" mode="aspectFill" />
               <view class="cell-check" v-if="isSelected(dish.id)">
                 <text>✓</text>
               </view>
@@ -91,7 +91,7 @@
 </template>
 
 <script>
-import { dishApi, categoryApi, menuApi } from '../../utils/api.js'
+import { dishApi, categoryApi, menuApi, getImageUrl } from '../../utils/api.js'
 import defaultDishImage from '../../static/default-dish.svg'
 
 function getTodayStr() {
@@ -109,7 +109,8 @@ export default {
       filteredDishes: [],
       selectedIds: [],
       selectedNames: [],
-      defaultDishImage
+      defaultDishImage,
+      getImageUrl
     }
   },
   async onLoad() {

@@ -74,4 +74,11 @@ public class DishController {
         dishService.deleteDish(id);
         return Result.ok();
     }
+
+    @Operation(summary = "菜品评分")
+    @PutMapping("/{id}/rate")
+    public Result<Void> rateDish(@PathVariable Long id, @RequestParam int rating) {
+        dishService.rateDish(id, rating);
+        return Result.ok();
+    }
 }

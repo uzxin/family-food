@@ -112,6 +112,9 @@ public class DishServiceImpl implements DishService {
         if (request.getImageUrl() != null) {
             dish.setImageUrl(request.getImageUrl());
         }
+        if (request.getRating() != null) {
+            dish.setRating(request.getRating());
+        }
         if (request.getRemark() != null) {
             dish.setRemark(request.getRemark());
         }
@@ -136,6 +139,18 @@ public class DishServiceImpl implements DishService {
     public void deleteDish(Long dishId) {
         dishMapper.deleteById(dishId);
         // 级联删除由数据库外键约束处理
+    }
+
+    @Override
+    public void rateDish(Long dishId, int rating) {
+        Dish dish = dishMapper.selectById(dishId);
+        if (dish == null) {
+            throw new BusinessException("菜品不存在");
+        }
+        if (rating < 0) rating = 0;
+        if (rating > 5) rating = 5;
+        dish.setRating(rating);
+        dishMapper.updateById(dish);
     }
 
     private List<String> getIngredients(Long dishId) {

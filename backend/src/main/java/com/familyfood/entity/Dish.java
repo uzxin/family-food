@@ -32,6 +32,9 @@ public class Dish {
     /** 菜品图片URL */
     private String imageUrl;
 
+    /** 评分：0-5 */
+    private Integer rating;
+
     /** 备注 */
     private String remark;
 

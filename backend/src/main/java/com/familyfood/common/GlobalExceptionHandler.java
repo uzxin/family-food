@@ -6,6 +6,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MultipartException;
 
 /**
  * 全局异常处理
@@ -18,6 +19,12 @@ public class GlobalExceptionHandler {
     public Result<Void> handleBusinessException(BusinessException e) {
         log.warn("业务异常: {}", e.getMessage());
         return Result.fail(e.getCode(), e.getMessage());
+    }
+
+    @ExceptionHandler(MultipartException.class)
+    public Result<Void> handleMultipartException(MultipartException e) {
+        log.error("文件上传请求异常: {}", e.getMessage());
+        return Result.fail(400, "文件上传请求格式错误，请使用文件上传方式提交");
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

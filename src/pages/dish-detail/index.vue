@@ -5,7 +5,7 @@
       <view class="dish-header-top">
         <image
           class="dish-cover"
-          :src="dish.imageUrl || defaultDishImage"
+          :src="getImageUrl(dish.imageUrl) || defaultDishImage"
           mode="aspectFill"
           @tap="previewDishImage"
         />
@@ -14,6 +14,10 @@
           <view class="dish-meta">
             <text class="dish-cat">{{ dish.categoryName }}</text>
             <text class="dish-diff">{{ getDifficultyName(dish.difficulty) }}</text>
+          </view>
+          <!-- 评分展示 -->
+          <view class="dish-rating" v-if="dish.rating">
+            <text class="rating-star" v-for="star in 5" :key="star" :class="{ filled: star <= dish.rating }">★</text>
           </view>
         </view>
       </view>
@@ -48,7 +52,7 @@
 </template>
 
 <script>
-import { dishApi } from '../../utils/api.js'
+import { dishApi, getImageUrl } from '../../utils/api.js'
 import defaultDishImage from '../../static/default-dish.svg'
 
 export default {
@@ -56,7 +60,8 @@ export default {
     return {
       dishId: '',
       dish: null,
-      defaultDishImage
+      defaultDishImage,
+      getImageUrl
     }
   },
   onLoad(options) {
@@ -89,9 +94,10 @@ export default {
 
     previewDishImage() {
       if (!this.dish || !this.dish.imageUrl) return
+      const url = getImageUrl(this.dish.imageUrl)
       uni.previewImage({
-        current: this.dish.imageUrl,
-        urls: [this.dish.imageUrl]
+        current: url,
+        urls: [url]
       })
     },
 
@@ -180,6 +186,23 @@ export default {
 .dish-diff {
   background: #f0f7ff;
   color: #4a90d9;
+}
+
+/* 评分 */
+.dish-rating {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  margin-top: 12rpx;
+}
+
+.rating-star {
+  font-size: 30rpx;
+  color: #e0d5c8;
+}
+
+.rating-star.filled {
+  color: #ffb020;
 }
 
 .fav-btn {

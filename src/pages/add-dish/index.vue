@@ -73,11 +73,17 @@
       <!-- 菜品图片 -->
       <view class="form-item">
         <text class="form-label">菜品图片</text>
-        <view class="image-upload" v-if="!form.image" @tap="chooseDishImage">
+        <!-- 上传中 -->
+        <view class="image-uploading" v-if="uploading">
+          <text class="image-uploading-text">图片上传中...</text>
+        </view>
+        <!-- 未选择图片 -->
+        <view class="image-upload" v-else-if="!form.image" @tap="chooseDishImage">
           <text class="image-upload-icon">📷</text>
           <text class="image-upload-text">上传菜品图片</text>
           <text class="image-upload-tip">支持拍照或从相册选择</text>
         </view>
+        <!-- 已选择图片 -->
         <view class="image-preview-wrap" v-else>
           <image class="dish-image-preview" :src="form.image" mode="aspectFill" @tap="previewDishImage" />
           <view class="image-actions">
@@ -114,7 +120,7 @@
 </template>
 
 <script>
-import { categoryApi, dishApi } from '../../utils/api.js'
+import { categoryApi, dishApi, fileApi, getImageUrl } from '../../utils/api.js'
 
 export default {
   data() {
@@ -122,12 +128,14 @@ export default {
       isEdit: false,
       editId: '',
       loading: false,
+      uploading: false,
       form: {
         name: '',
         categoryCode: 'stir-fry',
         difficulty: 'normal',
         ingredients: [],
-        image: '',
+        image: '',      // 预览用（本地路径或完整 URL）
+        imageUrl: '',   // 服务器返回的相对路径
         remark: ''
       },
       categories: [],
@@ -158,7 +166,8 @@ export default {
             categoryCode: dish.categoryCode,
             difficulty: dish.difficulty || 'normal',
             ingredients: dish.ingredients ? [...dish.ingredients] : [],
-            image: dish.imageUrl || '',
+            image: getImageUrl(dish.imageUrl),
+            imageUrl: dish.imageUrl || '',
             remark: dish.remark || ''
           }
         }
@@ -189,10 +198,19 @@ export default {
         count: 1,
         sizeType: ['compressed'],
         sourceType: ['album', 'camera'],
-        success: (res) => {
+        success: async (res) => {
           const [filePath] = res.tempFilePaths || []
           if (!filePath) return
-          this.form.image = filePath
+          this.uploading = true
+          try {
+            const relativePath = await fileApi.upload(filePath)
+            this.form.imageUrl = relativePath
+            this.form.image = getImageUrl(relativePath)
+          } catch (e) {
+            console.error('图片上传失败', e)
+          } finally {
+            this.uploading = false
+          }
         }
       })
     },
@@ -207,6 +225,7 @@ export default {
 
     removeDishImage() {
       this.form.image = ''
+      this.form.imageUrl = ''
     },
 
     async submit() {
@@ -220,7 +239,7 @@ export default {
         categoryCode: this.form.categoryCode,
         difficulty: this.form.difficulty,
         ingredients: this.form.ingredients,
-        imageUrl: this.form.image || undefined,
+        imageUrl: this.form.imageUrl || undefined,
         remark: this.form.remark || undefined
       }
 
@@ -401,6 +420,21 @@ export default {
 }
 
 /* 图片上传 */
+.image-uploading {
+  border: 2rpx dashed #d1d5db;
+  border-radius: 16rpx;
+  padding: 36rpx 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f9fafb;
+}
+
+.image-uploading-text {
+  font-size: 28rpx;
+  color: #999;
+}
+
 .image-upload {
   border: 2rpx dashed #d1d5db;
   border-radius: 16rpx;
