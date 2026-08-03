@@ -1,5 +1,18 @@
 <template>
   <view class="page">
+    <!-- 未登录提示 -->
+    <view class="login-prompt" v-if="!loggedIn">
+      <view class="login-prompt-avatar">
+        <text>👤</text>
+      </view>
+      <text class="login-prompt-title">登录后可管理个人信息</text>
+      <text class="login-prompt-desc">登录后可设置家庭、编辑菜品等</text>
+      <view class="login-prompt-btn" @tap="goLogin">
+        <text>去登录</text>
+      </view>
+    </view>
+
+    <view v-if="loggedIn">
     <view class="profile card" @tap="editNickname">
       <view class="profile-main">
         <view class="avatar">
@@ -77,6 +90,7 @@
     <view class="logout-btn" @tap="logout">
       <text>退出登录</text>
     </view>
+    </view>
 
     <tab-bar-view :current="3" />
   </view>
@@ -84,7 +98,7 @@
 
 <script>
 import tabBarView from '../../components/tab-bar-view/tab-bar-view.vue'
-import { userApi, familyApi, setUser, getUser, clearAuth } from '../../utils/api.js'
+import { userApi, familyApi, setUser, getUser, clearAuth, isLoggedIn } from '../../utils/api.js'
 
 const DEFAULT_SETTINGS = {
   spicyLevel: 'medium',
@@ -121,7 +135,8 @@ export default {
         { key: 'reminder', label: '提醒', icon: '⏰' },
         { key: 'quick', label: '快手菜', icon: '⚡' },
         { key: 'template', label: '模板', icon: '🍱' }
-      ]
+      ],
+      loggedIn: false
     }
   },
   computed: {
@@ -145,6 +160,8 @@ export default {
     }
   },
   onShow() {
+    this.loggedIn = isLoggedIn()
+    if (!this.loggedIn) return
     const cached = uni.getStorageSync('userSettings')
     this.settings = cached ? { ...DEFAULT_SETTINGS, ...cached } : { ...DEFAULT_SETTINGS }
     this.loadUserInfo()
@@ -307,9 +324,13 @@ export default {
         success: (res) => {
           if (!res.confirm) return
           clearAuth()
-          uni.reLaunch({ url: '/pages/login/index' })
+          this.loggedIn = false
         }
       })
+    },
+
+    goLogin() {
+      uni.navigateTo({ url: '/pages/login/index' })
     }
   }
 }
@@ -320,6 +341,49 @@ export default {
   min-height: 100vh;
   background: var(--color-bg);
   padding: 24rpx 24rpx 220rpx;
+}
+
+/* 未登录提示 */
+.login-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 100rpx 48rpx 60rpx;
+}
+.login-prompt-avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff8e5d, #ff6b35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 32rpx;
+}
+.login-prompt-avatar text {
+  font-size: 56rpx;
+}
+.login-prompt-title {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 12rpx;
+}
+.login-prompt-desc {
+  font-size: 26rpx;
+  color: var(--color-text-secondary);
+  margin-bottom: 48rpx;
+}
+.login-prompt-btn {
+  background: linear-gradient(135deg, #ff8e5d, #ff6b35);
+  border-radius: 999rpx;
+  padding: 22rpx 80rpx;
+  box-shadow: 0 8rpx 24rpx rgba(255, 107, 53, 0.3);
+}
+.login-prompt-btn text {
+  font-size: 30rpx;
+  color: #fff;
+  font-weight: 600;
 }
 
 .profile {

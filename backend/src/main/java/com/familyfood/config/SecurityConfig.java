@@ -1,8 +1,11 @@
 package com.familyfood.config;
 
+import com.familyfood.common.Result;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -41,6 +44,15 @@ public class SecurityConfig {
                 // 其余接口需认证
                 .anyRequest().authenticated()
             )
+            .exceptionHandling()
+                // 未认证请求返回401 JSON，而非默认403
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(401);
+                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                    response.setCharacterEncoding("UTF-8");
+                    new ObjectMapper().writeValue(response.getWriter(), Result.unauthorized("登录已过期，请重新登录"));
+                })
+            .and()
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

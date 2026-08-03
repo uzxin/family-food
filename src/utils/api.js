@@ -1,11 +1,26 @@
 /**
  * HTTP 请求封装
  * - 自动携带 Authorization 头
- * - 401 时自动跳转登录页
+ * - 401/403 时自动清除登录态并引导用户登录
  */
 
 const BASE_URL = 'https://api.uzxin.asia'
 const IMAGE_BASE_URL = 'https://api.uzxin.asia'
+
+// 防止多个请求同时触发多次跳转
+let _authRedirecting = false
+
+/** 清除登录态并跳转登录页 */
+function handleAuthExpired() {
+  clearAuth()
+  if (_authRedirecting) return
+  _authRedirecting = true
+  uni.showToast({ title: '登录已过期，请重新登录', icon: 'none' })
+  setTimeout(() => {
+    uni.navigateTo({ url: '/pages/login/index' })
+    _authRedirecting = false
+  }, 500)
+}
 
 // ========== Token 管理 ==========
 
@@ -66,9 +81,9 @@ function request(options) {
       header,
       success: (res) => {
         const body = res.data
-        if (res.statusCode === 401) {
-          clearAuth()
-          reject(new Error('未登录'))
+        if (res.statusCode === 401 || res.statusCode === 403) {
+          handleAuthExpired()
+          reject(new Error('登录已过期'))
           return
         }
         if (res.statusCode >= 400) {
@@ -125,9 +140,9 @@ export function uploadFile(filePath) {
       name: 'file',
       header,
       success: (res) => {
-        if (res.statusCode === 401) {
-          clearAuth()
-          reject(new Error('未登录'))
+        if (res.statusCode === 401 || res.statusCode === 403) {
+          handleAuthExpired()
+          reject(new Error('登录已过期'))
           return
         }
         if (res.statusCode >= 400) {
